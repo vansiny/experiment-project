@@ -1,13 +1,15 @@
 //#full-example
 package com.example
 
-import org.scalatest.{ BeforeAndAfterAll, WordSpecLike, Matchers }
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import akka.actor.ActorSystem
-import akka.testkit.{ TestKit, TestProbe }
+import akka.testkit.{TestKit, TestProbe}
+import com.example.akka.Greeter
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import Greeter._
-import Printer._
+import com.example.akka.Greeter._
+import com.example.akka.Printer._
 
 //#test-classes
 class AkkaQuickstartSpec(_system: ActorSystem)

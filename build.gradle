@@ -1,8 +1,47 @@
+
+buildscript {
+    ext {
+        buildType='sandbox'
+        depotInfo='none'
+//        downloadUser = getProperty('artifactory_user')
+//        downloadPassword = getProperty('artifactory_password')
+//        mavenRepo = getProperty('mavenRepo')
+    }
+//    if (!downloadUser?.trim() || !downloadPassword?.trim() || !mavenRepo?.trim()) {
+//        throw new InvalidUserDataException("Credentials not found. Please follow the instructions")
+//    }
+//    repositories {
+//        mavenLocal()
+//        maven {
+//            credentials {
+//                username = downloadUser
+//                password = downloadPassword
+//            }
+//            url mavenRepo
+//        }
+//    }
+//    dependencies {
+//        classpath ("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+//        classpath 'org.ajoberstar:grgit:2.3.0'
+//        classpath 'gradle.plugin.com.github.viswaramamoorthy:gradle-util-plugins:0.1.0-RELEASE'
+//    }
+}
+
+plugins {
+    id 'war'
+    id 'org.springframework.boot' version '2.7.10'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	id 'org.ajoberstar.grgit' version '5.0.0'
+	id "com.github.ManifestClasspath" version "0.1.0-RELEASE"
+}
+
 apply plugin: 'java'
 apply plugin: 'scala'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'application'
+apply plugin: 'org.ajoberstar.grgit'
+apply plugin: 'com.github.ManifestClasspath'
 
 sourceSets {
     main {
@@ -28,10 +67,26 @@ repositories {
     mavenLocal()
 }
 
+configurations.all {
+    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging' //Avoid jar conflict with log4j
+}
+
 dependencies {
   implementation 'com.typesafe.akka:akka-actor_2.13:2.8.0'
+    implementation 'org.typelevel:cats-core_2.13:2.9.0'
+    implementation 'co.fs2:fs2-io_2.13:3.6.1'
+    implementation 'dev.zio:zio_2.13:2.0.11'
+    implementation 'dev.zio:zio-streams_2.13:2.0.11'
+    implementation 'org.apache.spark:spark-core_2.13:3.3.2'
+
   testImplementation 'com.typesafe.akka:akka-testkit_2.13:2.8.0'
   testImplementation 'org.scalatest:scalatest_2.13:3.2.15'
+
+    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 /*
 eclipse{
@@ -60,7 +115,42 @@ eclipse{
 }
 */
 
-mainClassName = "com.lightbend.akka.sample.AkkaQuickstart"
+bootRun {
+    configure {
+        systemProperty "application.environment", "dev"
+        systemProperty "spring.profiles.active", "dev"
+        systemProperty "application.home", "."
+    }
+    jvmArgs=["-Dproject.name=${project.name}",
+             "-Dapplication.name=${project.name}",
+             '-Dapplication.environment=dev',
+             '-Dapplication.home=.',
+             '-Xdebug',
+             '-Xrunjdwp:server=y,transport=dt_socket,address=5006,suspend=n']
+}
+
+bootWar {
+    enabled=true
+    archiveName project.name + '.war'
+    manifest {
+        attributes("Application-Name": "${project.name}",
+                "Application-Version": "${project.version}",
+                "Application-Description": "${project.description}",
+                "Implementation-Title": "${project.name}",
+                "Implementation-Version": "${grgit.head().id}",
+                "Implementation-Vendor": "hg",
+                "Built-By": System.getProperty("user.name"),
+                "Build-Jdk": System.getProperty("java.version"),
+                "Build-Time": new Date(),
+                "Build": "${buildType}",
+                "Branch": "${grgit.branch.current.name}",
+                "Depot": "${depotInfo}",
+                "mainClass": "${mainClassName}")
+    }
+
+}
+
+mainClassName = "com.example.Starter"
 
 run {
   standardInput = System.in

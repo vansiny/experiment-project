@@ -1,9 +1,6 @@
-package com.example
+package com.example.checkcases
 
-import org.hg.entity.Apple
-import org.hg.entity.Liquid
-import org.hg.entity.Fruit
-import org.hg.entity.Juice
+import org.hg.entity.{Apple, Fruit, Juice, Liquid}
 
 object TestMain extends App {
 //  print(args)

@@ -1,4 +1,4 @@
-package com.example.com.example
+package com.example.pair
 
 class MyPair[T](val first:T,val second:T) {
   def small[T](first:T,second:T)(implicit order:T=>Ordered[T]):T={
